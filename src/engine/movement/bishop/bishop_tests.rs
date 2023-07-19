@@ -3,7 +3,7 @@ mod bishop_tests {
     use crate::{
         board::board::{Board, PieceType},
         engine::{
-            analyzer::analyzer::{Analyzer, PlayingAs},
+            game::analyzer::analyzer::{Analyzer, PlayingAs},
             movement::movement::Movement,
         },
     };

@@ -1,7 +1,9 @@
-use crate::engine::analyzer::analyzer::PlayingAs;
-use crate::engine::movement::movement::{
-    FULL_u64, Movement, COLUMN_A, COLUMN_H, EMPTY_U64, NOT_FOUND,
-    ROOK_FULL_COLUM_MOVEMENT_DEFINITION, ROW_1, ROW_8, SINGLE_BYTE_U8,
+use crate::engine::{
+    game::analyzer::analyzer::PlayingAs,
+    movement::movement::{
+        FULL_u64, Movement, COLUMN_H, EMPTY_U64, ROOK_FULL_COLUM_MOVEMENT_DEFINITION, ROW_1,
+        SINGLE_BYTE_U8,
+    },
 };
 
 pub struct Rook {}

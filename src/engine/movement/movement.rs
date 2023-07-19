@@ -1,6 +1,6 @@
-use crate::{
+use crate::engine::{
     board::board::{Board, PieceType},
-    engine::analyzer::analyzer::PlayingAs,
+    game::analyzer::analyzer::PlayingAs,
 };
 
 use super::{

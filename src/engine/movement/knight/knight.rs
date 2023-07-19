@@ -1,4 +1,4 @@
-use crate::engine::{analyzer::analyzer::PlayingAs, movement::movement::Movement};
+use crate::engine::{game::analyzer::analyzer::PlayingAs, movement::movement::Movement};
 
 pub struct Knight {}
 //rook movement

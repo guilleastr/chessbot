@@ -3,7 +3,7 @@ mod knigth_tests {
     use crate::{
         board::board::Board,
         engine::{
-            analyzer::analyzer::{Analyzer, PlayingAs},
+            game::analyzer::analyzer::{Analyzer, PlayingAs},
             movement::movement::Movement,
         },
     };

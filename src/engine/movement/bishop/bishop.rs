@@ -1,5 +1,7 @@
-use crate::engine::analyzer::analyzer::PlayingAs;
-use crate::engine::movement::movement::{FULL_u64, Movement, EMPTY_U64};
+use crate::engine::{
+    game::analyzer::analyzer::PlayingAs,
+    movement::movement::{FULL_u64, Movement, EMPTY_U64},
+};
 
 pub struct Bishop {}
 //rook movement

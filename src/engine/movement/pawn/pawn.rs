@@ -1,5 +1,5 @@
 use crate::engine::{
-    analyzer::analyzer::PlayingAs,
+    game::analyzer::analyzer::PlayingAs,
     movement::movement::{Movement, ROW_2, ROW_7},
 };
 
