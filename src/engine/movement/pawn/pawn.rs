@@ -1,6 +1,6 @@
 use crate::engine::{
     game::analyzer::analyzer::PlayingAs,
-    movement::movement::{Movement, ROW_2, ROW_7},
+    movement::movement::{Movement, ROW_2, ROW_3, ROW_4, ROW_5, ROW_7},
 };
 
 pub struct Pawn {}
@@ -12,7 +12,6 @@ impl Pawn {
         color: PlayingAs,
         white_bitboard: u64,
         black_bitboard: u64,
-        can_unpassant: bool,
     ) -> u64 {
         let piece_index = Movement::get_piece_index(pawn_bits);
         let row: i8 = piece_index / 8;
@@ -30,9 +29,8 @@ impl Pawn {
                 if start_blocking_piece == 0 {
                     move_bits |= pawn_bits >> 16;
                 }
-            } else {
-                move_bits |= (pawn_bits >> 9 | pawn_bits >> 7) & white_bitboard;
             }
+            move_bits |= (pawn_bits >> 9 | pawn_bits >> 7) & white_bitboard;
         }
 
         if matches!(color, PlayingAs::White) {
@@ -47,8 +45,33 @@ impl Pawn {
                 if start_blocking_piece == 0 {
                     move_bits |= pawn_bits << 16;
                 }
-            } else {
-                move_bits |= (pawn_bits << 9 | pawn_bits << 7) & black_bitboard;
+            }
+            move_bits |= (pawn_bits << 9 | pawn_bits << 7) & black_bitboard;
+        }
+
+        return move_bits;
+    }
+    pub fn get_moves_enpassant(pawn_bits: u64, unpassant_bits: u64, color: PlayingAs) -> u64 {
+        let piece_index = Movement::get_piece_index(pawn_bits);
+        let row: i8 = piece_index / 8;
+        let pawn_mask = pawn_bits << 1 | pawn_bits >> 1;
+
+        let mut move_bits = 0;
+        if matches!(color, PlayingAs::Black) {
+            if row != ROW_4 {
+                return move_bits;
+            }
+            if pawn_mask & unpassant_bits != 0 {
+                move_bits |= unpassant_bits >> 8;
+            }
+        }
+
+        if matches!(color, PlayingAs::White) {
+            if row != ROW_5 {
+                return move_bits;
+            }
+            if pawn_mask & unpassant_bits != 0 {
+                move_bits |= unpassant_bits << 8;
             }
         }
         return move_bits;

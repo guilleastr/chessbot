@@ -58,6 +58,9 @@ pub struct Board {
     pub b_r_rook_has_moved: bool,
     pub b_l_rook_has_moved: bool,
     pub b_king_has_moved: bool,
+
+    pub w_en_passant: u64,
+    pub b_en_passant: u64,
 }
 
 impl Board {
@@ -76,6 +79,9 @@ impl Board {
             b_queen: C_B_QUEEN,
             b_king: C_B_KING,
             b_pawns: C_B_PAWNS,
+
+            w_en_passant: 0,
+            b_en_passant: 0,
 
             w_r_rook_has_moved: false,
             w_l_rook_has_moved: false,
@@ -102,6 +108,9 @@ impl Board {
             b_queen: 0,
             b_king: 0,
             b_pawns: 0,
+
+            w_en_passant: 0,
+            b_en_passant: 0,
 
             w_r_rook_has_moved: false,
             w_l_rook_has_moved: false,
@@ -142,6 +151,9 @@ impl Board {
             b_queen: b_queen_board,
             b_king: b_king_board,
             b_pawns: b_pawn_board,
+
+            w_en_passant: 0,
+            b_en_passant: 0,
 
             w_r_rook_has_moved: false,
             w_l_rook_has_moved: false,
@@ -314,6 +326,7 @@ impl Board {
                     self.w_l_rook_has_moved = true;
                 }
                 self.try_take(destin_board);
+
                 self.w_rooks = self.w_rooks & !piece_board;
                 self.w_rooks = self.w_rooks | destin_board;
                 return true;
@@ -335,9 +348,17 @@ impl Board {
                 if Movement::check_for_check(PlayingAs::White, board_copy) {
                     return false;
                 }
-                self.try_take(destin_board);
-                self.w_pawns = self.w_pawns & !piece_board;
-                self.w_pawns = self.w_pawns | destin_board;
+
+                if Movement::is_enpassant(piece_board, self.b_en_passant) {
+                    self.try_take(destin_board >> 8);
+                    self.w_pawns = self.w_pawns & !piece_board;
+                    self.w_pawns = self.w_pawns | destin_board;
+                } else {
+                    self.try_take(destin_board);
+                    self.w_pawns = self.w_pawns & !piece_board;
+                    self.w_pawns = self.w_pawns | destin_board;
+                }
+
                 return true;
             }
 
@@ -417,9 +438,16 @@ impl Board {
                 if Movement::check_for_check(PlayingAs::Black, board_copy) {
                     return false;
                 }
-                self.try_take(destin_board);
-                self.b_pawns = self.b_pawns & !piece_board;
-                self.b_pawns = self.b_pawns | destin_board;
+
+                if Movement::is_enpassant(piece_board, self.w_en_passant) {
+                    self.try_take(destin_board << 8);
+                    self.b_pawns = self.b_pawns & !piece_board;
+                    self.b_pawns = self.b_pawns | destin_board;
+                } else {
+                    self.try_take(destin_board);
+                    self.b_pawns = self.b_pawns & !piece_board;
+                    self.b_pawns = self.b_pawns | destin_board;
+                }
                 return true;
             }
         }
@@ -446,6 +474,7 @@ impl Board {
                 //Move is not castle
                 match playing_as {
                     PlayingAs::Black => {
+                        self.b_en_passant = 0;
                         //Piece is Rook
                         if self.b_rooks & piece_bitboard > 0
                             && Movement::get_rook_moves(
@@ -531,14 +560,23 @@ impl Board {
                         }
                         //Piece is Pawn
                         if self.b_pawns & piece_bitboard > 0
-                            && Movement::get_pawn_moves(
+                            && (Movement::get_pawn_moves(
                                 piece_bitboard,
                                 playing_as,
                                 white_bitboard,
                                 black_bitboard,
                             ) & destin_bitboard
-                                > 0
+                                != 0
+                                || Movement::get_pawn_moves_enpassant(
+                                    piece_bitboard,
+                                    self.w_en_passant,
+                                    playing_as,
+                                ) & destin_bitboard
+                                    != 0)
                         {
+                            if piece_bitboard >> 16 == destin_bitboard {
+                                self.b_en_passant = destin_bitboard;
+                            }
                             return self.try_move(
                                 piece_bitboard,
                                 destin_bitboard,
@@ -547,6 +585,7 @@ impl Board {
                         }
                     }
                     PlayingAs::White => {
+                        self.w_en_passant = 0;
                         //Piece is Rook
                         if self.w_rooks & piece_bitboard > 0
                             && Movement::get_rook_moves(
@@ -632,14 +671,23 @@ impl Board {
                         }
                         //Piece is Pawn
                         if self.w_pawns & piece_bitboard > 0
-                            && Movement::get_pawn_moves(
+                            && (Movement::get_pawn_moves(
                                 piece_bitboard,
                                 playing_as,
                                 white_bitboard,
                                 black_bitboard,
                             ) & destin_bitboard
                                 > 0
+                                || Movement::get_pawn_moves_enpassant(
+                                    piece_bitboard,
+                                    self.b_en_passant,
+                                    playing_as,
+                                ) & destin_bitboard
+                                    != 0)
                         {
+                            if piece_bitboard << 16 == destin_bitboard {
+                                self.w_en_passant = destin_bitboard;
+                            }
                             return self.try_move(
                                 piece_bitboard,
                                 destin_bitboard,

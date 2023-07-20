@@ -602,7 +602,15 @@ impl Movement {
         white_bitboard: u64,
         black_bitboard: u64,
     ) -> u64 {
-        return Pawn::get_moves(pawn_bits, color, white_bitboard, black_bitboard, false);
+        return Pawn::get_moves(pawn_bits, color, white_bitboard, black_bitboard);
+    }
+
+    pub fn is_enpassant(piece_bits: u64, en_passant_pos: u64) -> bool {
+        return (piece_bits << 1 & en_passant_pos != 0) || (piece_bits >> 1 & en_passant_pos != 0);
+    }
+
+    pub fn get_pawn_moves_enpassant(pawn_bits: u64, enpassant_bits: u64, color: PlayingAs) -> u64 {
+        return Pawn::get_moves_enpassant(pawn_bits, enpassant_bits, color);
     }
 
     pub fn get_rook_moves(
