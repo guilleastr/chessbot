@@ -21,12 +21,32 @@ impl Player for Human {
         let mut buffer = String::new();
 
         // `read_line` returns `Result` of bytes read
-        stdin().read_line(&mut buffer);
+        stdin().read_line(&mut buffer).unwrap();
 
-        let fruits: Vec<&str> = buffer.trim().split(";").collect();
+        let input: Vec<&str> = buffer.trim().split(";").collect();
 
-        let from_str = fruits[0];
-        let to_str = fruits[1];
+        if input.len() < 2 {
+            match buffer.trim() {
+                "O-O" => {
+                    return Move {
+                        from: Position { colum: 0, row: 0 },
+                        to: Position { colum: 0, row: 0 },
+                        castle: crate::engine::board::position::position::CastleOptions::Right,
+                    };
+                }
+                "O-O-O" => {
+                    return Move {
+                        from: Position { colum: 0, row: 0 },
+                        to: Position { colum: 0, row: 0 },
+                        castle: crate::engine::board::position::position::CastleOptions::Left,
+                    };
+                }
+                _ => {}
+            }
+        }
+
+        let from_str = input[0];
+        let to_str = input[1];
 
         let from: Vec<&str> = from_str.trim().split("").collect();
         let to: Vec<&str> = to_str.split("").collect();
@@ -43,6 +63,7 @@ impl Player for Human {
                 colum: to_column,
                 row: to[2].parse().unwrap_or(0) - 1,
             },
+            castle: crate::engine::board::position::position::CastleOptions::None,
         };
     }
 }

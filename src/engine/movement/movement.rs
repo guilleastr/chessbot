@@ -1,5 +1,8 @@
 use crate::engine::{
-    board::board::{Board, PieceType},
+    board::{
+        board::{Board, PieceType},
+        position::position::{CastleOptions, Move},
+    },
     game::analyzer::analyzer::PlayingAs,
 };
 
@@ -123,7 +126,88 @@ impl Movement {
         return result_move_bits;
     }
 
-    pub fn check_for_check(check_for: &PlayingAs, board: Board) -> bool {
+    //Returns true if can castle
+    pub fn can_castle(board: &Board, playing_as: PlayingAs, movve: Move) -> bool {
+        match playing_as {
+            PlayingAs::White => {
+                let attacts =
+                    Movement::extract_all_attacks_for_color(board.to_owned(), PlayingAs::Black);
+
+                match movve.castle {
+                    CastleOptions::Right => {
+                        if board.w_r_rook_has_moved || board.w_king_has_moved {
+                            return false;
+                        }
+
+                        if board.w_king & 0x8 > 0
+                            && board.w_rooks & 0x1 > 0
+                            && board.getOcupancy() & 0x6 == 0
+                            && attacts & 0xe == 0
+                        {
+                            return true;
+                        }
+                        return false;
+                    }
+                    CastleOptions::Left => {
+                        if board.w_l_rook_has_moved || board.w_king_has_moved {
+                            return false;
+                        }
+
+                        if board.w_king & 0x8 > 0
+                            && board.w_rooks & 0x80 > 0
+                            && board.getOcupancy() & 0x70 == 0
+                            && attacts & 0x78 == 0
+                        {
+                            return true;
+                        }
+                        return false;
+                    }
+                    CastleOptions::None => {
+                        return false;
+                    }
+                }
+            }
+            PlayingAs::Black => {
+                let attacts =
+                    Movement::extract_all_attacks_for_color(board.to_owned(), PlayingAs::White);
+                match movve.castle {
+                    CastleOptions::Right => {
+                        if board.b_r_rook_has_moved || board.b_king_has_moved {
+                            return false;
+                        }
+
+                        if board.b_king & 0x800000000000000 > 0
+                            && board.b_rooks & 0x100000000000000 > 0
+                            && board.getOcupancy() & 0x600000000000000 == 0
+                            && attacts & 0xe00000000000000 == 0
+                        {
+                            return true;
+                        }
+                        return false;
+                    }
+                    CastleOptions::Left => {
+                        if board.b_l_rook_has_moved || board.b_king_has_moved {
+                            return false;
+                        }
+
+                        if board.b_king & 0x800000000000000 > 0
+                            && board.b_rooks & 0x8000000000000000 > 0
+                            && board.getOcupancy() & 0x7000000000000000 == 0
+                            && attacts & 0x7800000000000000 == 0
+                        {
+                            return true;
+                        }
+                        return false;
+                    }
+                    CastleOptions::None => {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn check_for_check(check_for: PlayingAs, board: Board) -> bool {
         let pawns: u64;
         let knights: u64;
         let bishops: u64;
@@ -208,6 +292,97 @@ impl Movement {
             );
 
             let bitboard_merge = (pawns | knights | rooks | bishops | queen) & board.b_king;
+
+            return bitboard_merge != 0;
+        }
+        return false;
+    }
+
+    pub fn check_for_check_at(check_for: &PlayingAs, board: Board, at_bitboard: u64) -> bool {
+        let pawns: u64;
+        let knights: u64;
+        let bishops: u64;
+        let rooks: u64;
+        let queen: u64;
+        if matches!(check_for, PlayingAs::White) {
+            pawns = Movement::extract_pieces_moves_from_bitboard(
+                board.b_pawns,
+                PlayingAs::Black,
+                PieceType::BlackPawn,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+            knights = Movement::extract_pieces_moves_from_bitboard(
+                board.b_knights,
+                PlayingAs::Black,
+                PieceType::BlackKnight,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+            rooks = Movement::extract_pieces_moves_from_bitboard(
+                board.b_rooks,
+                PlayingAs::Black,
+                PieceType::BlackRook,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+            bishops = Movement::extract_pieces_moves_from_bitboard(
+                board.b_bishops,
+                PlayingAs::Black,
+                PieceType::BlackBishop,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+            queen = Movement::extract_pieces_moves_from_bitboard(
+                board.b_queen,
+                PlayingAs::Black,
+                PieceType::BlackQueen,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+
+            let bitboard_merge = (pawns | knights | rooks | bishops | queen) & at_bitboard;
+
+            return bitboard_merge != 0;
+        }
+        if matches!(check_for, PlayingAs::Black) {
+            pawns = Movement::extract_pieces_moves_from_bitboard(
+                board.w_pawns,
+                PlayingAs::White,
+                PieceType::WhitePawn,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+            knights = Movement::extract_pieces_moves_from_bitboard(
+                board.w_knights,
+                PlayingAs::White,
+                PieceType::WhiteKnight,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+            rooks = Movement::extract_pieces_moves_from_bitboard(
+                board.w_rooks,
+                PlayingAs::White,
+                PieceType::WhiteRook,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+            bishops = Movement::extract_pieces_moves_from_bitboard(
+                board.w_bishops,
+                PlayingAs::White,
+                PieceType::WhiteBishop,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+            queen = Movement::extract_pieces_moves_from_bitboard(
+                board.w_queen,
+                PlayingAs::White,
+                PieceType::WhiteQueen,
+                board.getWhiteBitboard(),
+                board.getBlackBitboard(),
+            );
+
+            let bitboard_merge = (pawns | knights | rooks | bishops | queen) & at_bitboard;
 
             return bitboard_merge != 0;
         }
@@ -306,6 +481,109 @@ impl Movement {
             }
 
             return move_bits;
+        }
+    }
+
+    pub fn extract_all_attacks_for_color(board: Board, color: PlayingAs) -> u64 {
+        match color {
+            PlayingAs::White => {
+                let mut white_attacks = Movement::extract_pieces_moves_from_bitboard(
+                    board.w_pawns,
+                    color,
+                    PieceType::WhitePawn,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+
+                white_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.w_rooks,
+                    color,
+                    PieceType::WhiteRook,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+
+                white_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.w_bishops,
+                    color,
+                    PieceType::WhiteBishop,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+                white_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.w_knights,
+                    color,
+                    PieceType::WhiteKnight,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+                white_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.w_queen,
+                    color,
+                    PieceType::WhiteQueen,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+
+                white_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.w_king,
+                    color,
+                    PieceType::WhiteKing,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+
+                return white_attacks;
+            }
+            PlayingAs::Black => {
+                let mut black_attacks = Movement::extract_pieces_moves_from_bitboard(
+                    board.b_pawns,
+                    color,
+                    PieceType::BlackPawn,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+
+                black_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.b_rooks,
+                    color,
+                    PieceType::BlackRook,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+
+                black_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.b_bishops,
+                    color,
+                    PieceType::BlackBishop,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+                black_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.b_knights,
+                    color,
+                    PieceType::BlackKnight,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+                black_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.b_queen,
+                    color,
+                    PieceType::BlackQueen,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+
+                black_attacks |= Movement::extract_pieces_moves_from_bitboard(
+                    board.b_king,
+                    color,
+                    PieceType::BlackKing,
+                    board.getWhiteBitboard(),
+                    board.getBlackBitboard(),
+                );
+
+                return black_attacks;
+            }
         }
     }
 

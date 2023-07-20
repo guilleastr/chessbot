@@ -17,9 +17,9 @@ fn main() {
         engine::game::game::PlayerTypes::HUMAN,
     );
 
-    while true {
+    loop {
         game.take_turn();
-        thread::sleep(time::Duration::from_secs(1));
+        thread::sleep(time::Duration::from_millis(500));
     }
 }
 

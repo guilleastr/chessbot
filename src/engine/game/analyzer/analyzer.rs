@@ -1,7 +1,7 @@
 use crate::engine::{
     board::{
         board::Board,
-        position::position::{Move, Position},
+        position::position::{CastleOptions, Move, Position},
     },
     game::game::Player,
     movement::movement::Movement,
@@ -26,6 +26,7 @@ impl Player for Analyzer {
         return Move {
             from: Position { colum: 3, row: 4 },
             to: Position { colum: 2, row: 4 },
+            castle: CastleOptions::None,
         };
     }
 }
