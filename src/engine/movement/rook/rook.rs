@@ -1,5 +1,5 @@
 use crate::engine::{
-    game::analyzer::analyzer::PlayingAs,
+    board::board::Turn,
     movement::movement::{
         FULL_u64, Movement, COLUMN_H, EMPTY_U64, ROOK_FULL_COLUM_MOVEMENT_DEFINITION, ROW_1,
         SINGLE_BYTE_U8,
@@ -10,12 +10,7 @@ pub struct Rook {}
 //rook movement
 
 impl Rook {
-    pub fn get_moves(
-        rook_bits: u64,
-        color: PlayingAs,
-        white_bitboard: u64,
-        black_bitboard: u64,
-    ) -> u64 {
+    pub fn get_moves(rook_bits: u64, color: Turn, white_bitboard: u64, black_bitboard: u64) -> u64 {
         let piece_index = Movement::get_piece_index(rook_bits);
         let column = piece_index % 8;
         let row = piece_index / 8;

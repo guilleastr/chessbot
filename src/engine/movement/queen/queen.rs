@@ -1,4 +1,4 @@
-use crate::engine::{game::analyzer::analyzer::PlayingAs, movement::movement::Movement};
+use crate::engine::{board::board::Turn, movement::movement::Movement};
 
 pub struct Queen {}
 //rook movement
@@ -6,7 +6,7 @@ pub struct Queen {}
 impl Queen {
     pub fn get_moves(
         queen_bits: u64,
-        color: PlayingAs,
+        color: Turn,
         white_bitboard: u64,
         black_bitboard: u64,
     ) -> u64 {

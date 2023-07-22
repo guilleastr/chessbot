@@ -1,5 +1,5 @@
 use crate::engine::{
-    game::analyzer::analyzer::PlayingAs,
+    board::board::Turn,
     movement::movement::{FULL_u64, Movement, EMPTY_U64},
 };
 
@@ -9,7 +9,7 @@ pub struct Bishop {}
 impl Bishop {
     pub fn get_moves(
         bishop_bits: u64,
-        color: PlayingAs,
+        color: Turn,
         white_bitboard: u64,
         black_bitboard: u64,
     ) -> u64 {

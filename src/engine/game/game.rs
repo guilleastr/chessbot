@@ -6,10 +6,7 @@ use crate::engine::{
     movement::movement::Movement,
 };
 
-use super::{
-    analyzer::analyzer::{Analyzer, PlayingAs},
-    human::human::Human,
-};
+use super::{analyzer::analyzer::Analyzer, human::human::Human};
 
 pub enum PlayerTypes {
     AI,
@@ -98,7 +95,7 @@ impl Game {
         }
     }
 
-    pub fn is_checkmate(&self, color: PlayingAs) -> bool {
+    pub fn is_checkmate(&self, color: Turn) -> bool {
         match self.board.get_turn() {
             Turn::White => Movement::check_for_checkmate(color, self.board),
             Turn::Black => Movement::check_for_checkmate(color, self.board),
@@ -119,20 +116,12 @@ impl Game {
         let mut move_result = false;
         match self.white {
             Players::Robot => {
-                move_result = self.board.perform_move(
-                    Analyzer::do_move(),
-                    super::analyzer::analyzer::PlayingAs::White,
-                );
+                move_result = self.board.perform_move(Analyzer::do_move(), Turn::White);
             }
-            Players::Player => {
-                move_result = self.board.perform_move(
-                    Human::do_move(),
-                    super::analyzer::analyzer::PlayingAs::White,
-                )
-            }
+            Players::Player => move_result = self.board.perform_move(Human::do_move(), Turn::White),
         };
 
-        let check_result = Movement::check_for_check(PlayingAs::White, self.board);
+        let check_result = Movement::check_for_check(Turn::White, self.board);
         if !move_result || check_result {
             self.print_invalid_move(move_result, check_result);
             return false;
@@ -143,24 +132,21 @@ impl Game {
         let mut move_result = false;
         match self.black {
             Players::Robot => {
-                move_result = self.board.perform_move(
-                    Analyzer::do_move(),
-                    super::analyzer::analyzer::PlayingAs::Black,
-                )
+                move_result = self.board.perform_move(Analyzer::do_move(), Turn::Black)
             }
-            Players::Player => {
-                move_result = self.board.perform_move(
-                    Human::do_move(),
-                    super::analyzer::analyzer::PlayingAs::Black,
-                )
-            }
+            Players::Player => move_result = self.board.perform_move(Human::do_move(), Turn::Black),
         };
 
-        let check_result = Movement::check_for_check(PlayingAs::Black, self.board);
+        let check_result = Movement::check_for_check(Turn::Black, self.board);
         if !move_result || check_result {
             self.print_invalid_move(move_result, check_result);
             return false;
         }
         return true;
+    }
+
+    pub fn get_board(&self) -> Board {
+        let board_copy = self.board.to_owned();
+        return board_copy;
     }
 }

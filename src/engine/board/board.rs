@@ -1,6 +1,4 @@
-use crate::engine::{
-    game::analyzer::analyzer::PlayingAs, movement::movement::Movement, printer::printer::Printer,
-};
+use crate::engine::{movement::movement::Movement, printer::printer::Printer};
 
 use super::{
     fenn::fenn::FEN,
@@ -227,10 +225,10 @@ impl Board {
         return board_ocupancy != self.getOcupancy();
     }
 
-    fn try_castle(&mut self, movve: Move, playing_as: PlayingAs) -> bool {
+    fn try_castle(&mut self, movve: Move, playing_as: Turn) -> bool {
         if Movement::can_castle(self, playing_as, movve) {
             match playing_as {
-                PlayingAs::White => match movve.castle {
+                Turn::White => match movve.castle {
                     CastleOptions::Right => {
                         self.w_king = 0x2;
                         self.w_rooks = self.w_rooks & !0x1 | 0x4;
@@ -247,7 +245,7 @@ impl Board {
                         return false;
                     }
                 },
-                PlayingAs::Black => match movve.castle {
+                Turn::Black => match movve.castle {
                     CastleOptions::Right => {
                         self.b_king = 0x200000000000000;
                         self.b_rooks = self.b_rooks & !0x100000000000000 | 0x400000000000000;
@@ -278,7 +276,7 @@ impl Board {
             PieceType::WhiteQueen => {
                 board_copy.w_queen = board_copy.w_queen & !piece_board;
                 board_copy.w_queen = board_copy.w_queen | destin_board;
-                if Movement::check_for_check(PlayingAs::White, board_copy) {
+                if Movement::check_for_check(Turn::White, board_copy) {
                     return false;
                 }
                 self.try_take(destin_board);
@@ -289,7 +287,7 @@ impl Board {
             PieceType::WhiteKing => {
                 board_copy.w_king = board_copy.w_king & !piece_board;
                 board_copy.w_king = board_copy.w_king | destin_board;
-                if Movement::check_for_check(PlayingAs::White, board_copy) {
+                if Movement::check_for_check(Turn::White, board_copy) {
                     return false;
                 }
                 self.try_take(destin_board);
@@ -302,7 +300,7 @@ impl Board {
             PieceType::WhiteBishop => {
                 board_copy.w_bishops = board_copy.w_bishops & !piece_board;
                 board_copy.w_bishops = board_copy.w_bishops | destin_board;
-                if Movement::check_for_check(PlayingAs::White, board_copy) {
+                if Movement::check_for_check(Turn::White, board_copy) {
                     return false;
                 }
                 self.try_take(destin_board);
@@ -313,7 +311,7 @@ impl Board {
             PieceType::WhiteRook => {
                 board_copy.w_rooks = board_copy.w_rooks & !piece_board;
                 board_copy.w_rooks = board_copy.w_rooks | destin_board;
-                if Movement::check_for_check(PlayingAs::White, board_copy) {
+                if Movement::check_for_check(Turn::White, board_copy) {
                     return false;
                 }
                 if piece_board == 0x1 {
@@ -331,7 +329,7 @@ impl Board {
             PieceType::WhiteKnight => {
                 board_copy.w_knights = board_copy.w_knights & !piece_board;
                 board_copy.w_knights = board_copy.w_knights | destin_board;
-                if Movement::check_for_check(PlayingAs::White, board_copy) {
+                if Movement::check_for_check(Turn::White, board_copy) {
                     return false;
                 }
                 self.try_take(destin_board);
@@ -342,7 +340,7 @@ impl Board {
             PieceType::WhitePawn => {
                 board_copy.w_pawns = board_copy.w_pawns & !piece_board;
                 board_copy.w_pawns = board_copy.w_pawns | destin_board;
-                if Movement::check_for_check(PlayingAs::White, board_copy) {
+                if Movement::check_for_check(Turn::White, board_copy) {
                     return false;
                 }
 
@@ -363,7 +361,7 @@ impl Board {
                 board_copy.b_queen = board_copy.b_queen & !piece_board;
                 board_copy.b_queen = board_copy.b_queen | destin_board;
 
-                if Movement::check_for_check(PlayingAs::Black, board_copy) {
+                if Movement::check_for_check(Turn::Black, board_copy) {
                     return false;
                 }
                 self.try_take(destin_board);
@@ -375,7 +373,7 @@ impl Board {
                 board_copy.b_king = board_copy.b_king & !piece_board;
                 board_copy.b_king = board_copy.b_king | destin_board;
 
-                if Movement::check_for_check(PlayingAs::Black, board_copy) {
+                if Movement::check_for_check(Turn::Black, board_copy) {
                     return false;
                 }
                 self.try_take(destin_board);
@@ -389,7 +387,7 @@ impl Board {
                 board_copy.b_bishops = board_copy.b_bishops & !piece_board;
                 board_copy.b_bishops = board_copy.b_bishops | destin_board;
 
-                if Movement::check_for_check(PlayingAs::Black, board_copy) {
+                if Movement::check_for_check(Turn::Black, board_copy) {
                     return false;
                 }
                 self.try_take(destin_board);
@@ -401,7 +399,7 @@ impl Board {
                 board_copy.b_rooks = board_copy.b_rooks & !piece_board;
                 board_copy.b_rooks = board_copy.b_rooks | destin_board;
 
-                if Movement::check_for_check(PlayingAs::Black, board_copy) {
+                if Movement::check_for_check(Turn::Black, board_copy) {
                     return false;
                 }
                 if piece_board == 0x100000000000000 {
@@ -419,7 +417,7 @@ impl Board {
                 board_copy.b_knights = board_copy.b_knights & !piece_board;
                 board_copy.b_knights = board_copy.b_knights | destin_board;
 
-                if Movement::check_for_check(PlayingAs::Black, board_copy) {
+                if Movement::check_for_check(Turn::Black, board_copy) {
                     return false;
                 }
 
@@ -432,7 +430,7 @@ impl Board {
                 board_copy.b_pawns = board_copy.b_pawns & !piece_board;
                 board_copy.b_pawns = board_copy.b_pawns | destin_board;
 
-                if Movement::check_for_check(PlayingAs::Black, board_copy) {
+                if Movement::check_for_check(Turn::Black, board_copy) {
                     return false;
                 }
 
@@ -450,7 +448,7 @@ impl Board {
         }
     }
 
-    pub fn perform_move(&mut self, movve: Move, playing_as: PlayingAs) -> bool {
+    pub fn perform_move(&mut self, movve: Move, playing_as: Turn) -> bool {
         match movve.castle {
             CastleOptions::Right => return self.try_castle(movve, playing_as),
             CastleOptions::Left => return self.try_castle(movve, playing_as),
@@ -470,7 +468,7 @@ impl Board {
 
                 //Move is not castle
                 match playing_as {
-                    PlayingAs::Black => {
+                    Turn::Black => {
                         self.b_en_passant = 0;
                         //Piece is Rook
                         if self.b_rooks & piece_bitboard > 0
@@ -581,7 +579,7 @@ impl Board {
                             );
                         }
                     }
-                    PlayingAs::White => {
+                    Turn::White => {
                         self.w_en_passant = 0;
                         //Piece is Rook
                         if self.w_rooks & piece_bitboard > 0
