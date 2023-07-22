@@ -2,6 +2,8 @@ use engine::game::game::Game;
 
 use std::{thread, time};
 
+use crate::engine::game::analyzer::analyzer::PlayingAs;
+
 mod engine;
 
 const W_ROOKS: u64 = 0x8100000000000081;
@@ -12,7 +14,13 @@ const W_KING: u64 = 0x800000000000000;
 const W_PAWNS: u64 = 0x18000000;
 
 fn main() {
-    let mut game = Game::setup(
+    /* let mut game = Game::setup(
+        engine::game::game::PlayerTypes::HUMAN,
+        engine::game::game::PlayerTypes::HUMAN,
+    ); */
+    let fen_board = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
+    let mut game = Game::setup_from_fenn(
+        fen_board,
         engine::game::game::PlayerTypes::HUMAN,
         engine::game::game::PlayerTypes::HUMAN,
     );
@@ -20,6 +28,7 @@ fn main() {
     loop {
         game.take_turn();
         thread::sleep(time::Duration::from_millis(500));
+        println!("{}", game.is_checkmate(PlayingAs::Black))
     }
 }
 

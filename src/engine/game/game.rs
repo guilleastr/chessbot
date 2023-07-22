@@ -1,5 +1,8 @@
 use crate::engine::{
-    board::{board::Board, position::position::Move},
+    board::{
+        board::{Board, Turn},
+        position::position::Move,
+    },
     movement::movement::Movement,
 };
 
@@ -22,16 +25,10 @@ pub trait Player {
     fn do_move() -> Move;
 }
 
-pub enum Turn {
-    White,
-    Black,
-}
-
 pub struct Game {
     white: Players,
     black: Players,
     board: Board,
-    turn: Turn,
 }
 
 impl Game {
@@ -56,23 +53,55 @@ impl Game {
             white: white_player,
             black: black_player,
             board: Board::new(),
-            turn: Turn::White,
+        };
+    }
+    pub fn setup_from_fenn(
+        board_state: &'static str,
+        white: PlayerTypes,
+        black: PlayerTypes,
+    ) -> Game {
+        let white_player: Players;
+        let black_player: Players;
+
+        if matches!(white, PlayerTypes::AI) {
+            white_player = Players::Robot;
+        } else {
+            white_player = Players::Player;
+        }
+
+        if matches!(black, PlayerTypes::AI) {
+            black_player = Players::Robot;
+        } else {
+            black_player = Players::Player;
+        }
+
+        return Game {
+            white: white_player,
+            black: black_player,
+            board: Board::new_from_fenn_notation(board_state),
         };
     }
 
     pub fn take_turn(&mut self) {
         self.board.print_board_self("Board");
-        match self.turn {
+        match self.board.get_turn() {
             Turn::White => {
                 println!("White turn");
                 while !self.take_turn_white() {}
-                self.turn = Turn::Black;
+                self.board.set_turn(Turn::Black);
             }
             Turn::Black => {
                 println!("Black turn");
                 while !self.take_turn_black() {}
-                self.turn = Turn::White;
+                self.board.set_turn(Turn::White);
             }
+        }
+    }
+
+    pub fn is_checkmate(&self, color: PlayingAs) -> bool {
+        match self.board.get_turn() {
+            Turn::White => Movement::check_for_checkmate(color, self.board),
+            Turn::Black => Movement::check_for_checkmate(color, self.board),
         }
     }
 

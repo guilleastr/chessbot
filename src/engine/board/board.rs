@@ -2,7 +2,16 @@ use crate::engine::{
     game::analyzer::analyzer::PlayingAs, movement::movement::Movement, printer::printer::Printer,
 };
 
-use super::position::position::{CastleOptions, Move};
+use super::{
+    fenn::fenn::FEN,
+    position::position::{CastleOptions, Move},
+};
+
+#[derive(Copy, Clone)]
+pub enum Turn {
+    White,
+    Black,
+}
 
 #[derive(Clone, Copy)]
 pub enum PieceType {
@@ -51,16 +60,21 @@ pub struct Board {
     pub b_king: u64,
     pub b_pawns: u64,
 
-    pub w_r_rook_has_moved: bool,
-    pub w_l_rook_has_moved: bool,
+    pub has_w_king_side_castle: bool,
+    pub has_w_queen_side_castle: bool,
     pub w_king_has_moved: bool,
 
-    pub b_r_rook_has_moved: bool,
-    pub b_l_rook_has_moved: bool,
+    pub has_b_king_side_castle: bool,
+    pub has_b_queen_side_castle: bool,
     pub b_king_has_moved: bool,
 
     pub w_en_passant: u64,
     pub b_en_passant: u64,
+
+    pub full_move_count: i8,
+    pub half_move_count: i8,
+
+    pub turn: Turn,
 }
 
 impl Board {
@@ -83,13 +97,18 @@ impl Board {
             w_en_passant: 0,
             b_en_passant: 0,
 
-            w_r_rook_has_moved: false,
-            w_l_rook_has_moved: false,
+            has_w_king_side_castle: false,
+            has_w_queen_side_castle: false,
             w_king_has_moved: false,
 
-            b_r_rook_has_moved: false,
-            b_l_rook_has_moved: false,
+            has_b_king_side_castle: false,
+            has_b_queen_side_castle: false,
             b_king_has_moved: false,
+
+            full_move_count: 0,
+            half_move_count: 0,
+
+            turn: Turn::White,
         };
     }
 
@@ -112,57 +131,30 @@ impl Board {
             w_en_passant: 0,
             b_en_passant: 0,
 
-            w_r_rook_has_moved: false,
-            w_l_rook_has_moved: false,
+            has_w_king_side_castle: false,
+            has_w_queen_side_castle: false,
             w_king_has_moved: false,
 
-            b_r_rook_has_moved: false,
-            b_l_rook_has_moved: false,
+            has_b_king_side_castle: false,
+            has_b_queen_side_castle: false,
             b_king_has_moved: false,
+
+            full_move_count: 0,
+            half_move_count: 0,
+
+            turn: Turn::White,
         };
     }
+    pub fn new_from_fenn_notation(board_fenn: &'static str) -> Board {
+        return FEN::get_board_from_fenn_str(board_fenn);
+    }
 
-    pub fn new_from_values(
-        b_pawn_board: u64,
-        b_knigth_board: u64,
-        b_bishop_board: u64,
-        b_rook_board: u64,
-        b_queen_board: u64,
-        b_king_board: u64,
+    pub fn get_turn(&self) -> Turn {
+        return self.turn;
+    }
 
-        w_pawn_board: u64,
-        w_knigth_board: u64,
-        w_bishop_board: u64,
-        w_rook_board: u64,
-        w_queen_board: u64,
-        w_king_board: u64,
-    ) -> Board {
-        return Board {
-            w_rooks: w_rook_board,
-            w_knights: w_knigth_board,
-            w_bishops: w_bishop_board,
-            w_queen: w_queen_board,
-            w_king: w_king_board,
-            w_pawns: w_pawn_board,
-
-            b_rooks: b_rook_board,
-            b_knights: b_knigth_board,
-            b_bishops: b_bishop_board,
-            b_queen: b_queen_board,
-            b_king: b_king_board,
-            b_pawns: b_pawn_board,
-
-            w_en_passant: 0,
-            b_en_passant: 0,
-
-            w_r_rook_has_moved: false,
-            w_l_rook_has_moved: false,
-            w_king_has_moved: false,
-
-            b_r_rook_has_moved: false,
-            b_l_rook_has_moved: false,
-            b_king_has_moved: false,
-        };
+    pub fn set_turn(&mut self, turn: Turn) {
+        self.turn = turn;
     }
 
     pub fn getOcupancy(&self) -> u64 {
@@ -191,6 +183,7 @@ impl Board {
     }
 
     fn try_take(&mut self, destin_board: u64) -> bool {
+        let board_ocupancy = self.getOcupancy();
         if self.getWhiteBitboard() & destin_board > 0 {
             if self.w_rooks & destin_board > 0 {
                 self.w_rooks = self.w_rooks & !destin_board;
@@ -227,7 +220,11 @@ impl Board {
             }
         }
 
-        return false;
+        if board_ocupancy != self.getOcupancy() {
+            self.half_move_count = 0;
+        }
+
+        return board_ocupancy != self.getOcupancy();
     }
 
     fn try_castle(&mut self, movve: Move, playing_as: PlayingAs) -> bool {
@@ -237,13 +234,13 @@ impl Board {
                     CastleOptions::Right => {
                         self.w_king = 0x2;
                         self.w_rooks = self.w_rooks & !0x1 | 0x4;
-                        self.w_r_rook_has_moved = true;
+                        self.has_w_king_side_castle = true;
                         self.w_king_has_moved = true;
                     }
                     CastleOptions::Left => {
                         self.w_king = 0x20;
                         self.w_rooks = self.w_rooks & !0x80 | 0x10;
-                        self.w_l_rook_has_moved = true;
+                        self.has_w_queen_side_castle = true;
                         self.w_king_has_moved = true;
                     }
                     CastleOptions::None => {
@@ -254,13 +251,13 @@ impl Board {
                     CastleOptions::Right => {
                         self.b_king = 0x200000000000000;
                         self.b_rooks = self.b_rooks & !0x100000000000000 | 0x400000000000000;
-                        self.b_r_rook_has_moved = true;
+                        self.has_b_king_side_castle = true;
                         self.b_king_has_moved = true;
                     }
                     CastleOptions::Left => {
                         self.b_king = 0x2000000000000000;
                         self.b_rooks = self.b_rooks & !0x8000000000000000 | 0x1000000000000000;
-                        self.b_l_rook_has_moved = true;
+                        self.has_b_queen_side_castle = true;
                         self.b_king_has_moved = true;
                     }
                     CastleOptions::None => {
@@ -320,10 +317,10 @@ impl Board {
                     return false;
                 }
                 if piece_board == 0x1 {
-                    self.w_r_rook_has_moved = true;
+                    self.has_w_king_side_castle = true;
                 }
                 if piece_board == 0x80 {
-                    self.w_l_rook_has_moved = true;
+                    self.has_w_queen_side_castle = true;
                 }
                 self.try_take(destin_board);
 
@@ -408,10 +405,10 @@ impl Board {
                     return false;
                 }
                 if piece_board == 0x100000000000000 {
-                    self.b_r_rook_has_moved = true;
+                    self.has_b_king_side_castle = true;
                 }
                 if piece_board == 0x8000000000000000 {
-                    self.b_l_rook_has_moved = true;
+                    self.has_b_queen_side_castle = true;
                 }
                 self.try_take(destin_board);
                 self.b_rooks = self.b_rooks & !piece_board;
