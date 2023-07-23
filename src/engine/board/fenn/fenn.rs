@@ -160,8 +160,6 @@ impl FEN {
             column = 0;
             row += 1;
         }
-
-        board.print_board_self("FENN");
         return board;
     }
 }

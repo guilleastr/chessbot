@@ -2,7 +2,7 @@ use crate::engine::{movement::movement::Movement, printer::printer::Printer};
 
 use super::{
     fenn::fenn::FEN,
-    position::position::{CastleOptions, Move},
+    position::position::{CastleOptions, LegalMove, Position},
 };
 
 #[derive(Copy, Clone)]
@@ -225,45 +225,54 @@ impl Board {
         return board_ocupancy != self.getOcupancy();
     }
 
-    fn try_castle(&mut self, movve: Move, playing_as: Turn) -> bool {
-        if Movement::can_castle(self, playing_as, movve) {
-            match playing_as {
-                Turn::White => match movve.castle {
-                    CastleOptions::Right => {
+    fn try_castle(&mut self, movve: LegalMove, playing_as: Turn) -> bool {
+        match playing_as {
+            Turn::White => match movve.castle {
+                CastleOptions::KingSide => {
+                    if Movement::can_castle_king_side(*self, playing_as) {
                         self.w_king = 0x2;
                         self.w_rooks = self.w_rooks & !0x1 | 0x4;
                         self.has_w_king_side_castle = true;
                         self.w_king_has_moved = true;
+                        return true;
                     }
-                    CastleOptions::Left => {
+                }
+                CastleOptions::QueenSide => {
+                    if Movement::can_castle_queen_side(*self, playing_as) {
                         self.w_king = 0x20;
                         self.w_rooks = self.w_rooks & !0x80 | 0x10;
                         self.has_w_queen_side_castle = true;
                         self.w_king_has_moved = true;
+                        return true;
                     }
-                    CastleOptions::None => {
-                        return false;
-                    }
-                },
-                Turn::Black => match movve.castle {
-                    CastleOptions::Right => {
+                }
+                CastleOptions::None => {
+                    return false;
+                }
+            },
+            Turn::Black => match movve.castle {
+                CastleOptions::KingSide => {
+                    if Movement::can_castle_king_side(*self, playing_as) {
                         self.b_king = 0x200000000000000;
                         self.b_rooks = self.b_rooks & !0x100000000000000 | 0x400000000000000;
                         self.has_b_king_side_castle = true;
                         self.b_king_has_moved = true;
+                        return true;
                     }
-                    CastleOptions::Left => {
+                }
+                CastleOptions::QueenSide => {
+                    if Movement::can_castle_queen_side(*self, playing_as) {
                         self.b_king = 0x2000000000000000;
                         self.b_rooks = self.b_rooks & !0x8000000000000000 | 0x1000000000000000;
                         self.has_b_queen_side_castle = true;
                         self.b_king_has_moved = true;
+                        return true;
                     }
-                    CastleOptions::None => {
-                        return false;
-                    }
-                },
-            }
-            return true;
+                }
+                CastleOptions::None => {
+                    return false;
+                }
+            },
         }
         return false;
     }
@@ -448,25 +457,275 @@ impl Board {
         }
     }
 
-    pub fn perform_move(&mut self, movve: Move, playing_as: Turn) -> bool {
-        match movve.castle {
-            CastleOptions::Right => return self.try_castle(movve, playing_as),
-            CastleOptions::Left => return self.try_castle(movve, playing_as),
-            CastleOptions::None => {
-                let mut piece_bitboard: u64 = (1 as u64) << movve.from.colum;
-                if movve.from.row != 0 {
-                    piece_bitboard = piece_bitboard << movve.from.row * 8
+    fn get_piece_bitboard_from_position(movve: Position) -> u64 {
+        let mut piece_bitboard: u64 = (1 as u64) << movve.colum;
+        if movve.row != 0 {
+            piece_bitboard = piece_bitboard << movve.row * 8
+        }
+
+        return piece_bitboard;
+    }
+
+    fn do_try_move(&mut self, piece_board: u64, destin_board: u64, piece_type: PieceType) -> bool {
+        let mut board_copy = self.to_owned();
+
+        match piece_type {
+            PieceType::WhiteQueen => {
+                self.try_take(destin_board);
+                self.w_queen = self.w_queen & !piece_board;
+                self.w_queen = self.w_queen | destin_board;
+                return true;
+            }
+            PieceType::WhiteKing => {
+                self.try_take(destin_board);
+                self.w_king = self.w_king & !piece_board;
+                self.w_king = self.w_king | destin_board;
+
+                self.w_king_has_moved = true;
+                return true;
+            }
+            PieceType::WhiteBishop => {
+                self.try_take(destin_board);
+                self.w_bishops = self.w_bishops & !piece_board;
+                self.w_bishops = self.w_bishops | destin_board;
+                return true;
+            }
+            PieceType::WhiteRook => {
+                if piece_board == 0x1 {
+                    self.has_w_king_side_castle = true;
+                }
+                if piece_board == 0x80 {
+                    self.has_w_queen_side_castle = true;
+                }
+                self.try_take(destin_board);
+
+                self.w_rooks = self.w_rooks & !piece_board;
+                self.w_rooks = self.w_rooks | destin_board;
+                return true;
+            }
+            PieceType::WhiteKnight => {
+                self.try_take(destin_board);
+                self.w_knights = self.w_knights & !piece_board;
+                self.w_knights = self.w_knights | destin_board;
+                return true;
+            }
+            PieceType::WhitePawn => {
+                board_copy.w_pawns = board_copy.w_pawns & !piece_board;
+                board_copy.w_pawns = board_copy.w_pawns | destin_board;
+                if Movement::check_for_check(Turn::White, board_copy) {
+                    return false;
                 }
 
-                let mut destin_bitboard: u64 = (1 as u64) << movve.to.colum;
-                if movve.to.row != 0 {
-                    destin_bitboard = destin_bitboard << movve.to.row * 8
+                if Movement::is_enpassant(piece_board, self.b_en_passant) {
+                    self.try_take(destin_board >> 8);
+                    self.w_pawns = self.w_pawns & !piece_board;
+                    self.w_pawns = self.w_pawns | destin_board;
+                } else {
+                    self.try_take(destin_board);
+                    self.w_pawns = self.w_pawns & !piece_board;
+                    self.w_pawns = self.w_pawns | destin_board;
                 }
+
+                return true;
+            }
+
+            PieceType::BlackQueen => {
+                self.try_take(destin_board);
+                self.b_queen = self.b_queen & !piece_board;
+                self.b_queen = self.b_queen | destin_board;
+                return true;
+            }
+            PieceType::BlackKing => {
+                self.try_take(destin_board);
+                self.b_king = self.b_king & !piece_board;
+                self.b_king = self.b_king | destin_board;
+
+                self.b_king_has_moved = true;
+                return true;
+            }
+            PieceType::BlackBishop => {
+                self.try_take(destin_board);
+                self.b_bishops = self.b_bishops & !piece_board;
+                self.b_bishops = self.b_bishops | destin_board;
+                return true;
+            }
+            PieceType::BlackRook => {
+                if piece_board == 0x100000000000000 {
+                    self.has_b_king_side_castle = true;
+                }
+                if piece_board == 0x8000000000000000 {
+                    self.has_b_queen_side_castle = true;
+                }
+                self.try_take(destin_board);
+                self.b_rooks = self.b_rooks & !piece_board;
+                self.b_rooks = self.b_rooks | destin_board;
+                return true;
+            }
+            PieceType::BlackKnight => {
+                self.try_take(destin_board);
+                self.b_knights = self.b_knights & !piece_board;
+                self.b_knights = self.b_knights | destin_board;
+                return true;
+            }
+            PieceType::BlackPawn => {
+                if Movement::is_enpassant(piece_board, self.w_en_passant) {
+                    self.try_take(destin_board << 8);
+                    self.b_pawns = self.b_pawns & !piece_board;
+                    self.b_pawns = self.b_pawns | destin_board;
+                } else {
+                    self.try_take(destin_board);
+                    self.b_pawns = self.b_pawns & !piece_board;
+                    self.b_pawns = self.b_pawns | destin_board;
+                }
+                return true;
+            }
+        }
+    }
+
+    pub fn do_move(&mut self, movve: LegalMove, playing_as: Turn) -> bool {
+        match movve.castle {
+            CastleOptions::KingSide => return self.try_castle(movve, playing_as),
+            CastleOptions::QueenSide => return self.try_castle(movve, playing_as),
+            CastleOptions::None => {
+                //Move is not castle
+                let piece_bitboard: u64 = Board::get_piece_bitboard_from_position(movve.from);
+                let destin_bitboard: u64 = Board::get_piece_bitboard_from_position(movve.to);
+
+                let white_bitboard = self.getWhiteBitboard();
+                let black_bitboard = self.getBlackBitboard();
+                match playing_as {
+                    Turn::Black => {
+                        self.b_en_passant = 0;
+                        //Piece is Rook
+                        if self.b_rooks & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::BlackRook,
+                            );
+                        }
+
+                        //Piece is Knight
+                        if self.b_knights & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::BlackKnight,
+                            );
+                        }
+
+                        //Piece is Bishop
+                        if self.b_bishops & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::BlackBishop,
+                            );
+                        }
+
+                        //Piece is King
+                        if self.b_king & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::BlackKing,
+                            );
+                        }
+                        //Piece is Queen
+                        if self.b_queen & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::BlackQueen,
+                            );
+                        }
+                        //Piece is Pawn
+                        if self.b_pawns & piece_bitboard > 0 {
+                            if piece_bitboard >> 16 == destin_bitboard {
+                                self.b_en_passant = destin_bitboard;
+                            }
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::BlackPawn,
+                            );
+                        }
+                    }
+                    Turn::White => {
+                        self.w_en_passant = 0;
+                        //Piece is Rook
+                        if self.w_rooks & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::WhiteRook,
+                            );
+                        }
+
+                        //Piece is Knight
+                        if self.w_knights & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::WhiteKnight,
+                            );
+                        }
+
+                        //Piece is Bishop
+                        if self.w_bishops & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::WhiteBishop,
+                            );
+                        }
+
+                        //Piece is King
+                        if self.w_king & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::WhiteKing,
+                            );
+                        }
+                        //Piece is Queen
+                        if self.w_queen & piece_bitboard > 0 {
+                            return self.do_try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::WhiteQueen,
+                            );
+                        }
+                        //Piece is Pawn
+                        if self.w_pawns & piece_bitboard > 0 {
+                            if piece_bitboard << 16 == destin_bitboard {
+                                self.w_en_passant = destin_bitboard;
+                            }
+                            return self.try_move(
+                                piece_bitboard,
+                                destin_bitboard,
+                                PieceType::WhitePawn,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    pub fn perform_move(&mut self, movve: LegalMove, playing_as: Turn) -> bool {
+        match movve.castle {
+            CastleOptions::KingSide => return self.try_castle(movve, playing_as),
+            CastleOptions::QueenSide => return self.try_castle(movve, playing_as),
+            CastleOptions::None => {
+                //Move is not castle
+                let piece_bitboard: u64 = Board::get_piece_bitboard_from_position(movve.from);
+                let destin_bitboard: u64 = Board::get_piece_bitboard_from_position(movve.to);
 
                 let white_bitboard = self.getWhiteBitboard();
                 let black_bitboard = self.getBlackBitboard();
 
-                //Move is not castle
                 match playing_as {
                     Turn::Black => {
                         self.b_en_passant = 0;

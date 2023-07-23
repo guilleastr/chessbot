@@ -1,6 +1,6 @@
 use crate::engine::board::{
     board::{Board, PieceType, Turn},
-    position::position::{CastleOptions, Move},
+    position::position::{CastleOptions, LegalMove},
 };
 
 use super::{
@@ -123,41 +123,76 @@ impl Movement {
         return result_move_bits;
     }
 
+    pub fn get_oposite_color(color: Turn) -> Turn {
+        match color {
+            Turn::Black => return Turn::White,
+            Turn::White => return Turn::Black,
+        }
+    }
+
+    pub fn can_castle_king_side(board: Board, playing_as: Turn) -> bool {
+        match playing_as {
+            Turn::White => {
+                let attacts =
+                    Movement::extract_all_attacks_for_color(board.to_owned(), Turn::Black);
+
+                return !(board.has_w_king_side_castle || board.w_king_has_moved)
+                    && board.w_king & 0x8 > 0
+                    && board.w_rooks & 0x1 > 0
+                    && board.getOcupancy() & 0x6 == 0
+                    && attacts & 0xe == 0;
+            }
+            Turn::Black => {
+                let attacts =
+                    Movement::extract_all_attacks_for_color(board.to_owned(), Turn::White);
+
+                return !(board.has_b_king_side_castle || board.b_king_has_moved)
+                    && board.b_king & 0x800000000000000 > 0
+                    && board.b_rooks & 0x100000000000000 > 0
+                    && board.getOcupancy() & 0x600000000000000 == 0
+                    && attacts & 0xe00000000000000 == 0;
+            }
+        }
+    }
+
+    pub fn can_castle_queen_side(board: Board, playing_as: Turn) -> bool {
+        match playing_as {
+            Turn::White => {
+                let attacts =
+                    Movement::extract_all_attacks_for_color(board.to_owned(), Turn::Black);
+
+                return !(board.has_w_queen_side_castle || board.w_king_has_moved)
+                    && board.w_king & 0x8 > 0
+                    && board.w_rooks & 0x80 > 0
+                    && board.getOcupancy() & 0x70 == 0
+                    && attacts & 0x78 == 0;
+            }
+            Turn::Black => {
+                let attacts =
+                    Movement::extract_all_attacks_for_color(board.to_owned(), Turn::White);
+
+                return !(board.has_b_queen_side_castle || board.b_king_has_moved)
+                    && board.b_king & 0x800000000000000 > 0
+                    && board.b_rooks & 0x8000000000000000 > 0
+                    && board.getOcupancy() & 0x7000000000000000 == 0
+                    && attacts & 0x7800000000000000 == 0;
+            }
+        }
+    }
+
     //Returns true if can castle
-    pub fn can_castle(board: &Board, playing_as: Turn, movve: Move) -> bool {
+    pub fn can_castle(board: &Board, playing_as: Turn, movve: LegalMove) -> bool {
         match playing_as {
             Turn::White => {
                 let attacts =
                     Movement::extract_all_attacks_for_color(board.to_owned(), Turn::Black);
 
                 match movve.castle {
-                    CastleOptions::Right => {
-                        if board.has_w_king_side_castle || board.w_king_has_moved {
-                            return false;
-                        }
-
-                        if board.w_king & 0x8 > 0
-                            && board.w_rooks & 0x1 > 0
-                            && board.getOcupancy() & 0x6 == 0
-                            && attacts & 0xe == 0
-                        {
-                            return true;
-                        }
-                        return false;
+                    CastleOptions::KingSide => {
+                        return Movement::can_castle_king_side(board.to_owned(), playing_as);
                     }
-                    CastleOptions::Left => {
-                        if board.has_w_queen_side_castle || board.w_king_has_moved {
-                            return false;
-                        }
-
-                        if board.w_king & 0x8 > 0
-                            && board.w_rooks & 0x80 > 0
-                            && board.getOcupancy() & 0x70 == 0
-                            && attacts & 0x78 == 0
-                        {
-                            return true;
-                        }
-                        return false;
+                    CastleOptions::QueenSide => {
+                        return Movement::can_castle_queen_side(board.to_owned(), playing_as);
                     }
                     CastleOptions::None => {
                         return false;
@@ -168,33 +203,11 @@ impl Movement {
                 let attacts =
                     Movement::extract_all_attacks_for_color(board.to_owned(), Turn::White);
                 match movve.castle {
-                    CastleOptions::Right => {
-                        if board.has_b_king_side_castle || board.b_king_has_moved {
-                            return false;
-                        }
-
-                        if board.b_king & 0x800000000000000 > 0
-                            && board.b_rooks & 0x100000000000000 > 0
-                            && board.getOcupancy() & 0x600000000000000 == 0
-                            && attacts & 0xe00000000000000 == 0
-                        {
-                            return true;
-                        }
-                        return false;
+                    CastleOptions::KingSide => {
+                        return Movement::can_castle_king_side(board.to_owned(), playing_as);
                     }
-                    CastleOptions::Left => {
-                        if board.has_b_queen_side_castle || board.b_king_has_moved {
-                            return false;
-                        }
-
-                        if board.b_king & 0x800000000000000 > 0
-                            && board.b_rooks & 0x8000000000000000 > 0
-                            && board.getOcupancy() & 0x7000000000000000 == 0
-                            && attacts & 0x7800000000000000 == 0
-                        {
-                            return true;
-                        }
-                        return false;
+                    CastleOptions::QueenSide => {
+                        return Movement::can_castle_queen_side(board.to_owned(), playing_as);
                     }
                     CastleOptions::None => {
                         return false;

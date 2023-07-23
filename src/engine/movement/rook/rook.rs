@@ -1,8 +1,8 @@
 use crate::engine::{
     board::board::Turn,
     movement::movement::{
-        FULL_u64, Movement, COLUMN_H, EMPTY_U64, ROOK_FULL_COLUM_MOVEMENT_DEFINITION, ROW_1,
-        SINGLE_BYTE_U8,
+        FULL_u64, Movement, COLUMN_H, EMPTY_U64, NOT_FOUND, ROOK_FULL_COLUM_MOVEMENT_DEFINITION,
+        ROW_1, SINGLE_BYTE_U8,
     },
 };
 

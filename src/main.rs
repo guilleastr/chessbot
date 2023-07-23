@@ -1,23 +1,40 @@
 use engine::game::game::Game;
 
-use std::{thread, time};
+use std::{
+    thread,
+    time::{self, Instant},
+};
 
 mod engine;
 
 fn main() {
-    /* let mut game = Game::setup(
-        engine::game::game::PlayerTypes::HUMAN,
-        engine::game::game::PlayerTypes::HUMAN,
-    ); */
-    let fen_board = "r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 1";
+    //play_game()
+}
+
+fn test() {
+    let fen_board = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
     let mut game = Game::setup_from_fenn(
         fen_board,
         engine::game::game::PlayerTypes::HUMAN,
+        engine::game::game::PlayerTypes::AI,
+    );
+}
+
+fn play_game() {
+    let fen_board = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+    let mut game = Game::setup_from_fenn(
+        fen_board,
         engine::game::game::PlayerTypes::HUMAN,
+        engine::game::game::PlayerTypes::AI,
     );
 
     loop {
+        let start = Instant::now();
         game.take_turn();
+        let duration = start.elapsed();
+        println!("{}ns", duration.as_millis());
         thread::sleep(time::Duration::from_millis(500));
     }
 }

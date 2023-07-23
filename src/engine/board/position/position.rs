@@ -1,8 +1,8 @@
 #[derive(Clone, Copy)]
 pub enum CastleOptions {
     None,
-    Right,
-    Left,
+    KingSide,
+    QueenSide,
 }
 
 #[derive(Clone, Copy)]
@@ -12,7 +12,7 @@ pub struct Position {
 }
 
 #[derive(Clone, Copy)]
-pub struct Move {
+pub struct LegalMove {
     pub from: Position,
     pub to: Position,
     pub castle: CastleOptions,

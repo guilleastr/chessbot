@@ -27,7 +27,12 @@ impl King {
         if row > ROW_8 {
             up_moves = (base_row << shift_base_row_amount) << (row + 1) * 8;
         }
-        let mut same_row_moves = base_row << column - 1;
+
+        let mut same_row_pos = column - 1;
+        if same_row_pos < 0 {
+            same_row_pos = 0
+        }
+        let mut same_row_moves = base_row << same_row_pos;
         if row > 0 {
             same_row_moves = same_row_moves << row * 8;
         }

@@ -44,8 +44,14 @@ impl Bishop {
             let enemy_diagonal = diagonal & enemy_blockers;
 
             if enemy_diagonal != 0 {
-                let lsb = Movement::lsb_pos(enemy_diagonal);
-                let mask = FULL_u64 << lsb + 1;
+                let mut lsb = Movement::lsb_pos(enemy_diagonal);
+
+                if lsb == 63 {
+                    lsb = 63;
+                } else {
+                    lsb += 1
+                }
+                let mask = FULL_u64 << lsb;
                 diagonal = !mask & diagonal;
             }
 
@@ -76,7 +82,8 @@ impl Bishop {
 
             if enemy_diagonal != 0 {
                 let msb = Movement::msb_pos(enemy_diagonal);
-                let mask = FULL_u64 >> 63 - msb + 1;
+                let msb_pos = if 63 - msb + 1 > 63 { 63 } else { 63 - msb + 1 };
+                let mask = FULL_u64 >> msb_pos;
                 diagonal = !mask & diagonal;
             }
 

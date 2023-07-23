@@ -1,7 +1,7 @@
 use crate::engine::{
     board::{
         board::{Board, Turn},
-        position::position::Move,
+        position::position::LegalMove,
     },
     movement::movement::Movement,
 };
@@ -19,7 +19,7 @@ enum Players {
 }
 
 pub trait Player {
-    fn do_move() -> Move;
+    fn do_move(board: Board, color: Turn) -> LegalMove;
 }
 
 pub struct Game {
@@ -80,6 +80,9 @@ impl Game {
     }
 
     pub fn take_turn(&mut self) {
+        if self.is_checkmate(self.board.get_turn()) {
+            print!("CheckMate!")
+        }
         self.board.print_board_self("Board");
         match self.board.get_turn() {
             Turn::White => {
@@ -116,9 +119,15 @@ impl Game {
         let mut move_result = false;
         match self.white {
             Players::Robot => {
-                move_result = self.board.perform_move(Analyzer::do_move(), Turn::White);
+                move_result = self
+                    .board
+                    .perform_move(Analyzer::do_move(self.board, Turn::White), Turn::White);
             }
-            Players::Player => move_result = self.board.perform_move(Human::do_move(), Turn::White),
+            Players::Player => {
+                move_result = self
+                    .board
+                    .perform_move(Human::do_move(self.board, Turn::White), Turn::White)
+            }
         };
 
         let check_result = Movement::check_for_check(Turn::White, self.board);
@@ -132,9 +141,15 @@ impl Game {
         let mut move_result = false;
         match self.black {
             Players::Robot => {
-                move_result = self.board.perform_move(Analyzer::do_move(), Turn::Black)
+                move_result = self
+                    .board
+                    .perform_move(Analyzer::do_move(self.board, Turn::Black), Turn::Black)
             }
-            Players::Player => move_result = self.board.perform_move(Human::do_move(), Turn::Black),
+            Players::Player => {
+                move_result = self
+                    .board
+                    .perform_move(Human::do_move(self.board, Turn::Black), Turn::Black)
+            }
         };
 
         let check_result = Movement::check_for_check(Turn::Black, self.board);
