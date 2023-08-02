@@ -1,8 +1,8 @@
 use crate::engine::{
-    board::board::Turn,
+    board::board::{Board, Turn},
     movement::movement::{
-        FULL_u64, Movement, COLUMN_H, EMPTY_U64, NOT_FOUND, ROOK_FULL_COLUM_MOVEMENT_DEFINITION,
-        ROW_1, SINGLE_BYTE_U8,
+        FULL_u64, Movement, COLUMN_H, EMPTY_U64, ROOK_FULL_COLUM_MOVEMENT_DEFINITION, ROW_1,
+        SINGLE_BYTE_U8,
     },
 };
 
@@ -10,12 +10,19 @@ pub struct Rook {}
 //rook movement
 
 impl Rook {
-    pub fn get_moves(rook_bits: u64, color: Turn, white_bitboard: u64, black_bitboard: u64) -> u64 {
+    pub fn get_moves(rook_bits: u64, color: Turn, board: Board) -> u64 {
         let piece_index = Movement::get_piece_index(rook_bits);
+        if piece_index < 0 {
+            return 0;
+        }
+
         let column = piece_index % 8;
         let row = piece_index / 8;
 
         let mut move_bits: u64 = EMPTY_U64;
+
+        let white_bitboard = board.getWhiteBitboard();
+        let black_bitboard = board.getBlackBitboard();
 
         let enemy_blockers = Movement::enemy_blockers(&color, white_bitboard, black_bitboard);
         let ally_bloquers =

@@ -39,6 +39,7 @@ impl Printer {
             PieceType::BlackRook => BLACK_ROOK_CHAR,
             PieceType::BlackKnight => BLACK_KNIGHT_CHAR,
             PieceType::BlackPawn => BLACK_PAWN_CHAR,
+            _ => "",
         }
     }
     pub(self) fn get_print_param_array_for_piece(

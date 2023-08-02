@@ -36,7 +36,7 @@ mod bishop_tests {
     fn empty_board_bottom_right() {
         let board = Board::new_empty();
         let test_bits: u64 = 0x1;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -50,7 +50,7 @@ mod bishop_tests {
         let board = Board::new_empty();
 
         let test_bits: u64 = 0b0000000000000000000000000000000000000000000000000000000010000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -65,7 +65,7 @@ mod bishop_tests {
         let board = Board::new_empty();
 
         let test_bits: u64 = 0x100000000000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -79,7 +79,7 @@ mod bishop_tests {
         let board = Board::new_empty();
 
         let test_bits: u64 = 0x8000000000000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -93,7 +93,7 @@ mod bishop_tests {
         let board = Board::new_empty();
 
         let test_bits: u64 = 0x10000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -107,7 +107,7 @@ mod bishop_tests {
         let board = Board::new_empty();
 
         let test_bits: u64 = 0x8;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -121,7 +121,7 @@ mod bishop_tests {
         let board = Board::new_empty();
 
         let test_bits: u64 = 0x1000000000000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -135,7 +135,7 @@ mod bishop_tests {
         let board = Board::new_empty();
 
         let test_bits: u64 = 0x8000000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -149,7 +149,7 @@ mod bishop_tests {
         let board = Board::new_empty();
 
         let test_bits: u64 = 0x1000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -165,7 +165,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::Black);
 
         let test_bits: u64 = 0x4;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -179,7 +179,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::Black);
 
         let test_bits: u64 = 0x20;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -193,7 +193,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::Black);
 
         let test_bits: u64 = 0x800000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -207,7 +207,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::Black);
 
         let test_bits: u64 = 0x10000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -221,7 +221,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::Black);
 
         let test_bits: u64 = 0x800000000000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -235,7 +235,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::Black);
 
         let test_bits: u64 = 0x8000000000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -248,7 +248,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::Black);
 
         let test_bits: u64 = 0x800;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -264,7 +264,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::White);
 
         let test_bits: u64 = 0x4;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -278,7 +278,7 @@ mod bishop_tests {
 
         let test_bits: u64 = 0x20;
         board.print_board_self("Test board");
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -293,7 +293,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::White);
 
         let test_bits: u64 = 0x800000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -307,7 +307,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::White);
 
         let test_bits: u64 = 0x10000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -321,7 +321,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::White);
 
         let test_bits: u64 = 0x800000000000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -335,7 +335,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::White);
 
         let test_bits: u64 = 0x8000000000000;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),
@@ -348,7 +348,7 @@ mod bishop_tests {
         let board = get_board_by_color(&Turn::White);
 
         let test_bits: u64 = 0x800;
-        let result: u64 = Movement::get_bishop_moves(
+        let result: u64 = Movement::get_bishop_moves_bitboard(
             test_bits,
             Turn::Black,
             board.getWhiteBitboard(),

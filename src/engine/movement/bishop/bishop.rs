@@ -1,5 +1,5 @@
 use crate::engine::{
-    board::board::Turn,
+    board::board::{Board, Turn},
     movement::movement::{FULL_u64, Movement, EMPTY_U64},
 };
 
@@ -7,17 +7,15 @@ pub struct Bishop {}
 //rook movement
 
 impl Bishop {
-    pub fn get_moves(
-        bishop_bits: u64,
-        color: Turn,
-        white_bitboard: u64,
-        black_bitboard: u64,
-    ) -> u64 {
+    pub fn get_moves(bishop_bits: u64, color: Turn, board: Board) -> u64 {
         let piece_index = Movement::get_piece_index(bishop_bits);
         let column = piece_index % 8;
         let row = piece_index / 8;
 
         let mut move_bits: u64 = EMPTY_U64;
+
+        let white_bitboard = board.getWhiteBitboard();
+        let black_bitboard = board.getBlackBitboard();
 
         let enemy_blockers = Movement::enemy_blockers(&color, white_bitboard, black_bitboard);
         let ally_bloquers = Movement::ally_blockers(&color, white_bitboard, black_bitboard);

@@ -17,7 +17,7 @@ mod pawn_tests {
     }
 
     fn do_move(board: Board, test_bits: u64) -> u64 {
-        let result: u64 = Movement::get_pawn_moves(
+        let result: u64 = Movement::get_pawn_moves_bitboard(
             test_bits,
             Turn::White,
             board.getWhiteBitboard(),

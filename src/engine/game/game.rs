@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use crate::engine::{
     board::{
         board::{Board, Turn},
@@ -81,18 +83,19 @@ impl Game {
 
     pub fn take_turn(&mut self) {
         if self.is_checkmate(self.board.get_turn()) {
-            print!("CheckMate!")
+            print!("CheckMate!");
+            exit(0);
         }
         self.board.print_board_self("Board");
         match self.board.get_turn() {
             Turn::White => {
                 println!("White turn");
-                while !self.take_turn_white() {}
+                self.take_turn_white();
                 self.board.set_turn(Turn::Black);
             }
             Turn::Black => {
                 println!("Black turn");
-                while !self.take_turn_black() {}
+                self.take_turn_black();
                 self.board.set_turn(Turn::White);
             }
         }
@@ -100,68 +103,39 @@ impl Game {
 
     pub fn is_checkmate(&self, color: Turn) -> bool {
         match self.board.get_turn() {
-            Turn::White => Movement::check_for_checkmate(color, self.board),
-            Turn::Black => Movement::check_for_checkmate(color, self.board),
+            Turn::White => Movement::check_for_checkmate(color, self.get_board()),
+            Turn::Black => Movement::check_for_checkmate(color, self.get_board()),
         }
     }
 
-    fn print_invalid_move(&self, move_result: bool, check_result: bool) {
-        if !move_result {
-            println!("Invalid Move!");
-        }
-
-        if check_result {
-            println!("Can't end turn on check!!");
-        }
-    }
-
-    fn take_turn_white(&mut self) -> bool {
-        let mut move_result = false;
+    fn take_turn_white(&mut self) {
         match self.white {
             Players::Robot => {
-                move_result = self
-                    .board
-                    .perform_move(Analyzer::do_move(self.board, Turn::White), Turn::White);
+                self.board
+                    .do_move(Analyzer::do_move(self.board, Turn::White), Turn::White);
             }
-            Players::Player => {
-                move_result = self
-                    .board
-                    .perform_move(Human::do_move(self.board, Turn::White), Turn::White)
-            }
+            Players::Player => self
+                .board
+                .do_move(Human::do_move(self.board, Turn::White), Turn::White),
         };
-
-        let check_result = Movement::check_for_check(Turn::White, self.board);
-        if !move_result || check_result {
-            self.print_invalid_move(move_result, check_result);
-            return false;
-        }
-        return true;
     }
-    fn take_turn_black(&mut self) -> bool {
-        let mut move_result = false;
-        match self.black {
-            Players::Robot => {
-                move_result = self
-                    .board
-                    .perform_move(Analyzer::do_move(self.board, Turn::Black), Turn::Black)
-            }
-            Players::Player => {
-                move_result = self
-                    .board
-                    .perform_move(Human::do_move(self.board, Turn::Black), Turn::Black)
-            }
-        };
 
-        let check_result = Movement::check_for_check(Turn::Black, self.board);
-        if !move_result || check_result {
-            self.print_invalid_move(move_result, check_result);
-            return false;
-        }
-        return true;
+    fn take_turn_black(&mut self) {
+        match self.black {
+            Players::Robot => self
+                .board
+                .do_move(Analyzer::do_move(self.board, Turn::Black), Turn::Black),
+            Players::Player => self
+                .board
+                .do_move(Human::do_move(self.board, Turn::Black), Turn::Black),
+        };
     }
 
     pub fn get_board(&self) -> Board {
-        let board_copy = self.board.to_owned();
-        return board_copy;
+        self.board
+    }
+
+    pub fn get_board_copy(&self) -> Board {
+        self.board.clone()
     }
 }

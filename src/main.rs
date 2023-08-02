@@ -8,7 +8,9 @@ use std::{
 mod engine;
 
 fn main() {
-    //play_game()
+    play_game();
+
+    //test()
 }
 
 fn test() {
@@ -19,6 +21,27 @@ fn test() {
         engine::game::game::PlayerTypes::HUMAN,
         engine::game::game::PlayerTypes::AI,
     );
+
+    let start = Instant::now();
+
+    let moves = game
+        .get_board_copy()
+        .extract_all_legal_moves_for_color(engine::board::board::Turn::White);
+
+    let duration = start.elapsed();
+
+    println!("Extract {}mc", duration.as_micros());
+
+    println!("{}", moves.len());
+
+    let start = Instant::now();
+
+    game.get_board_copy()
+        .legalize_moves(moves, engine::board::board::Turn::White);
+
+    let duration = start.elapsed();
+
+    println!("Legalize {}mc", duration.as_micros());
 }
 
 fn play_game() {
@@ -34,7 +57,7 @@ fn play_game() {
         let start = Instant::now();
         game.take_turn();
         let duration = start.elapsed();
-        println!("{}ns", duration.as_millis());
+        //println!("{}milli", duration.as_millis());
         thread::sleep(time::Duration::from_millis(500));
     }
 }

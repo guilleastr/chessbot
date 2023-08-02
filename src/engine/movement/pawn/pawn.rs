@@ -1,15 +1,19 @@
 use crate::engine::{
-    board::board::Turn,
-    movement::movement::{Movement, ROW_2, ROW_4, ROW_5, ROW_7},
+    board::board::{Board, Turn},
+    movement::movement::{Movement, ROW_2, ROW_4, ROW_5, ROW_7, SINGLE_BYTE},
 };
 
 pub struct Pawn {}
 //rook movement
 
 impl Pawn {
-    pub fn get_moves(pawn_bits: u64, color: Turn, white_bitboard: u64, black_bitboard: u64) -> u64 {
+    pub fn get_moves(pawn_bits: u64, color: Turn, board: Board) -> u64 {
+        let white_bitboard = board.getWhiteBitboard();
+        let black_bitboard = board.getBlackBitboard();
+
         let piece_index = Movement::get_piece_index(pawn_bits);
         let row: i8 = piece_index / 8;
+        let column: i8 = piece_index % 8;
 
         let mut move_bits = 0;
         if matches!(color, Turn::Black) {
@@ -25,7 +29,8 @@ impl Pawn {
                     move_bits |= pawn_bits >> 16;
                 }
             }
-            move_bits |= (pawn_bits >> 9 | pawn_bits >> 7) & white_bitboard;
+            move_bits |=
+                (pawn_bits >> 9 | pawn_bits >> 7) & (white_bitboard & SINGLE_BYTE << (row - 1) * 8);
         }
 
         if matches!(color, Turn::White) {
@@ -41,11 +46,13 @@ impl Pawn {
                     move_bits |= pawn_bits << 16;
                 }
             }
-            move_bits |= (pawn_bits << 9 | pawn_bits << 7) & black_bitboard;
+            move_bits |=
+                (pawn_bits << 9 | pawn_bits << 7) & (black_bitboard & SINGLE_BYTE << (row + 1) * 8);
         }
 
         return move_bits;
     }
+
     pub fn get_moves_enpassant(pawn_bits: u64, unpassant_bits: u64, color: Turn) -> u64 {
         let piece_index = Movement::get_piece_index(pawn_bits);
         let row: i8 = piece_index / 8;

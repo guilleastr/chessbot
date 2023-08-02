@@ -1,15 +1,16 @@
-use crate::engine::{board::board::Turn, movement::movement::Movement};
+use crate::engine::{
+    board::board::{Board, Turn},
+    movement::movement::Movement,
+};
 
 pub struct Knight {}
 //rook movement
 
 impl Knight {
-    pub fn get_moves(
-        knight_bits: u64,
-        color: Turn,
-        white_bitboard: u64,
-        black_bitboard: u64,
-    ) -> u64 {
+    pub fn get_moves(knight_bits: u64, color: Turn, board: Board) -> u64 {
+        let white_bitboard = board.getWhiteBitboard();
+        let black_bitboard = board.getBlackBitboard();
+
         let l1 = (knight_bits >> 1) & 0x7f7f7f7f7f7f7f7f;
         let l2 = (knight_bits >> 2) & (0x3f3f3f3f3f3f3f3f);
         let r1 = (knight_bits << 1) & (0xfefefefefefefefe);
